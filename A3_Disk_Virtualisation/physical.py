@@ -13,7 +13,7 @@ class Fragments:
 
 # A class whose object we will create for each virtual disk
 class Disk:
-	def __init__(self, blockId, num_blocks, fragment, fragment_size):
+	def __init__(self, blockId, num_blocks, fragment):
 		self.blockId = blockID					# BlockID of this disk
 		self.num_blocks = num_blocks			# Number of blocks in this virtual disk
 		self.fragment = fragment				# A list of fragments for this virtual disk
@@ -76,13 +76,84 @@ def write_physical_block(block_num, block_info):
 	else:
 		raise Exception("Error : Block number out of bounds") 
 
-def create_disk():
-	# Create disk and allocate its fragments from global_fragments_list
-	pass
+# Create disk and allocate its fragments from global_fragments_list
+def create_disk(id, num_blocks):
+	global global_fragments_list
+	global disks
+	if id not in disks:
+		allocated = False
+		fragment = []
+		total_space_left = 0
+		for i in range(len(global_fragments_list)):
+			total_space_left += global_fragments_list[i].num_blocks
 
+			if global_fragments_list[i].num_blocks == num_blocks:
+				fragment.append(global_fragments_list[i])
+				allocated = True
+				global_fragments_list.pop(count)
+				break
+			elif global_fragments_list[i].num_blocks > num_blocks:
+				global_fragments_list[i].num_blocks -= num_blocks
+				fragment.append(Fragments(global_fragments_list[i].starting_block+global_fragments_list[i].num_blocks ,num_blocks))
+				allocated = True
+				break
+
+		required = num_blocks
+		if (not allocated) and (total_space_left >= required):
+			for i in range(len(global_fragments_list)-1, -1, -1):
+				if required > 0:
+					if global_fragments_list.num_blocks <= required:
+						fragment.append(global_fragments_list[i])
+						global_fragments_list.pop(i)
+					else:
+						global_fragments_list[i].num_blocks -= required
+						fragment.append(Fragments(global_fragments_list[i].starting_block+global_fragments_list[i].num_blocks ,required))
+				else:
+					break
+		else:
+			raise Exception("Error : Not enough space left to create disk of this size") 
+
+		my_obj = Disk(id, num_blocks, fragment)
+		disks[id] = my_obj
+	else:
+		raise Exception("Error : Disk ID already exists") 
+
+# Delete disk and merge fragments in global_fragments_list
 def delete_disk(id):
-	# Delete disk and merge fragments in global_fragments_list
-	pass
+	global disks
+	global global_fragments_list
+	obj = disks[id]
+	for fragment in obj.fragment:
+		leng = len(global_fragments_list)
+		end_tf = fragment.starting_block + fragment.num_blocks
+		for j in range(leng):
+			if global_fragments_list[j].starting_block > end_tf:
+				if j > 0:
+					prev_end_tf = global_fragments_list[j-1].starting_block+global_fragments_list[j-1].num_blocks
+					if prev_end_tf == fragment.starting_block:
+						global_fragments_list[j-1].num_blocks += fragment.num_blocks
+					else:
+						global_fragments_list.insert(j-1, fragment)
+				else:
+					global_fragments_list.insert(fragment)
+			elif global_fragments_list[j].starting_block == end_tf:
+				if j > 0:
+					prev_end_tf = global_fragments_list[j-1].starting_block+global_fragments_list[j-1].num_blocks
+					if prev_end_tf == fragment.starting_block:
+						global_fragments_list[j-1].num_blocks += fragment.num_blocks
+					else:
+						global_fragments_list.insert(j-1, fragment)
+				else:
+					global_fragments_list[j].starting_block = fragment.starting_block
+					global_fragments_list[j].num_blocks += fragment.num_blocks
+			else: 
+				if j == leng-1:
+					prev_end_tf = global_fragments_list[j].starting_block+global_fragments_list[j].num_blocks
+					if prev_end_tf == fragment.starting_block:
+						global_fragments_list[j].num_blocks += fragment.num_blocks
+					else:
+						global_fragments_list.append(fragment)
+	disks[id] = None
 
 
 block_size = 100
