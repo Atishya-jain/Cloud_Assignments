@@ -187,80 +187,128 @@ for i in range(global_virtual_disk_size):
 
 def testReadWritePhysical():
 	try:
+		print("-----writing Atishya Jain at block 345")
 		write_physical_block(345,"Atishya Jain")
 	except Exception as e:
 		print(e)
 
 	try:
+		print("-----writing Mankaran Singh at block 145")
 		write_physical_block(145,"Mankaran Singh")
 	except Exception as e:
 		print(e)
 
 	try:
+		print("-----writing Avaljot Singh at block 500")
 		write_physical_block(500,"Avaljot Singh")
 	except Exception as e:
 		print(e)
 
 	try:
+		print("-----writing Mayank Singh Chauhan at block 82")
 		write_physical_block(82,"Mayank Singh Chauhan")
 	except Exception as e:
 		print(e)
-		
+	
+	print("-----reading block 145")
 	print(read_physical_block(145))
 
 	try:
+		print("-----reading block 500")
 		print(read_physical_block(500))
 	except Exception as e:
 		print(e)
 
+	print("-----reading block 82")
 	print(read_physical_block(82))
+	print("-----reading block 345")
 	print(read_physical_block(345))
 
 	try:
+		print("-----reading block -23")
 		print(read_physical_block(-23))
 	except Exception as e:
 		print(e)
+	print("-----reading block 121")
 	print(read_physical_block(121))
 
 def testDiskCreation():
 	global global_fragments_list
 	for i in range(4):
 		create_disk(i,50)
+		print("-----creating disk "+str(i)+" of size 50-----")
+		print("-----prinitng fragments-----")
 		print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	delete_disk(1)
+	print("-----deleting disk 1-----")
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	delete_disk(3)
+	print("-----deleting disk 3-----")
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	for i in range(3):
 		create_disk(i+10,100)
+		print("-----creating disk "+str(i+10)+" of size 100-----")
+		print("-----prinitng fragments-----")
 		print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	create_disk(5,100)
+	print("-----creating disk 5 of size 100-----")
+	print("-----prinitng fragments-----")	
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	delete_disk(5)
+	print("-----deleting disk 5-----")
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	delete_disk(12)
+	print("-----deleting disk 12-----")
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	delete_disk(11)
+	print("-----deleting disk 11-----")
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	delete_disk(10)
+	print("-----deleting disk 10-----")
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	delete_disk(2)
+	print("-----deleting disk 2-----")
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	delete_disk(0)
+	print("-----deleting disk 0-----")
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 
 def testReadWriteVirtual():
 	create_disk(0,400)
+	print("-----creating disk 0 of size 400-----")
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	write_block(0,58,"Mayank Singh Chauhan")
+	print("-----write Mayank Singh Chauhan at disk 0 at block 58-----")
+	print("-----read at disk 0 at block 58-----")
 	print(read_block(0,58))
 	create_disk(1,99)
+	print("-----creating disk 1 of size 99-----")
 	write_block(1,58,"Mankaran Singh")
+	print("-----write Mankaran Singh at disk 1 at block 58-----")
+	print("-----read at disk 1 at block 58-----")
 	print(read_block(1,58))
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 	delete_disk(1)
+	print("-----delete disk 1-----")
+	print("-----prinitng fragments-----")
 	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
 
+print("----------TEST READ WRITE PHYSICAL BEGIN--------")
 testReadWritePhysical()
+print("----------TEST READ WRITE PHYSICAL END--------")
+print("----------TEST DISK CREATION BEGIN--------")
 testDiskCreation()
+print("----------TEST DISK CREATION END--------")
+print("----------TEST READ WRITE VIRTUAL BEGIN--------")
 testReadWriteVirtual()
+print("----------TEST READ WRITE VIRTUAL END--------")
