@@ -1,3 +1,5 @@
+# We are assuming that blocks are 0 indexed everywhere
+
 class Block:
 	def __init__(self):
 		self.data = ''
@@ -15,17 +17,32 @@ class Disk:
 		self.blockId = blockID					# BlockID of this disk
 		self.num_blocks = num_blocks			# Number of blocks in this virtual disk
 		self.fragment = fragment				# A list of fragments for this virtual disk
-		self.fragment_size = fragment_size		# A list of fragment sizes for this virtual disk
 
 	def read(self, block_num):
 		# This function will call read_physical_block and write_physical_block
 		# after figuring out the correct virtual block number
-		pass
-
+		if block_num >= self.num_blocks:
+			raise Exception("Error : Block number out of bounds")
+		else:
+			for i in self.fragment:
+				if i.num_blocks > block_num:
+					virtual_address = i.starting_block + block_num
+					return read_physical_block(virtual_address)
+				block_num -= i.num_blocks
+			raise Exception("Error : Some unknown read error occurred")
+			
 	def write(self, block_num, data):
 		# This function will call read_physical_block and write_physical_block
 		# after figuring out the correct virtual block number
-		pass
+		if block_num >= self.num_blocks:
+			raise Exception("Error : Block number out of bounds")
+		else:
+			for i in self.fragment:
+				if i.num_blocks > block_num:
+					virtual_address = i.starting_block + block_num
+					return write_physical_block(virtual_address, data)
+				block_num -= i.num_blocks
+			raise Exception("Error : Some unknown write error occurred")
 		
 # I/O on smaller virtual user created disks. User level APIs
 def read_block(id, block_num):
