@@ -1,5 +1,5 @@
 # We are assuming that blocks are 0 indexed everywhere
-
+import logging
 class Block:
 	def __init__(self):
 		self.data = ''
@@ -17,6 +17,12 @@ class Disk:
 		self.blockId = blockId					# BlockID of this disk
 		self.num_blocks = num_blocks			# Number of blocks in this virtual disk
 		self.fragment = fragment				# A list of fragments for this virtual disk
+		
+		#-------------CRITICAL-------------
+		self.log_array = []                     # This would maintain all write operations from the beginning, to help us checkpoint
+		self.checkpoints = []					# Each checkpoint would be a copy of the log_array existing during the time of checkpointing
+		#----------CRITICAL END-------------
+
 
 	def read(self, block_num):
 		# This function will call read_physical_block and write_physical_block
@@ -31,18 +37,60 @@ class Disk:
 				block_num -= i.num_blocks
 			raise Exception("Error : Some unknown read error occurred")
 			
-	def write(self, block_num, data):
+	def write(self, block_num, data, log=True):
 		# This function will call read_physical_block and write_physical_block
 		# after figuring out the correct virtual block number
+		# when log is true I log the data on the log file
 		if block_num >= self.num_blocks:
 			raise Exception("Error : Block number out of bounds")
 		else:
 			for i in self.fragment:
 				if i.num_blocks > block_num:
 					virtual_address = i.starting_block + block_num
-					return write_physical_block(virtual_address, data)
+					success, error = write_physical_block(virtual_address, data)
+					if(success):
+						#write to log array
+						if(log):
+							self.log_array.append((block_num, data))
+					else:
+						raise Exception(error)
 				block_num -= i.num_blocks
-			raise Exception("Error : Some unknown write error occurred")
+			# raise Exception("Error : Some unknown write error occurred")
+
+	#------------CHECKPOINTING FUNCTIONS------------
+	def create_checkpoint(self):
+		self.checkpoints.append(self.log_array.copy())
+		return len(self.checkpoints)-1
+
+	def restore_checkpoint(self,cpt):
+		#restore the disk state at checkpoint index cpt from the array self.checkpoints
+		# Step 1: Write empty string on all blocks of this disk
+		for i in range(self.num_blocks):
+			self.write(i,"",False)
+		# Step 2: Restore state
+		if(cpt>=len(self.checkpoints)):
+			raise Exception("Error: checkpoint id not valid")
+		writes_to_do = self.checkpoints[cpt]
+		for block_num, data in writes_to_do:
+			self.write(block_num,data,False)
+		# Step 3: Replace current log file to checkpointed log file
+		self.log_array = self.checkpoints[cpt].copy()
+
+
+
+# User level APIs for checkpointing
+def create_checkpoint(id):
+	global disks
+	if id in disks:
+		return disks[id].create_checkpoint()
+	else:
+		raise Exception("Error : Disk ID not present")
+def restore_checkpoint(id,cpt):
+	global disks
+	if id in disks:
+		disks[id].restore_checkpoint(cpt)
+	else:
+		raise Exception("Error : Disk ID not present")
 		
 # I/O on smaller virtual user created disks. User level APIs
 def read_block(id, block_num):
@@ -68,13 +116,17 @@ def read_physical_block(block_num):
 		raise Exception("Error : Block number out of bounds") 
 
 def write_physical_block(block_num, block_info):
+	#returns (Success:bool, error_message:string)
 	global virtual_to_physical
 	if block_num < 500 and block_num >= 0 and len(block_info) <= 100:
 		virtual_to_physical[block_num].data = block_info
+		return (True,"")
 	elif len(block_info) > 100:
-		raise Exception("Error : Data to write exceeds block size") 
+		return (False,"Error : Data to write exceeds block size")
+		# raise Exception("Error : Data to write exceeds block size") 
 	else:
-		raise Exception("Error : Block number out of bounds") 
+		return (False,"Error : Block number out of bounds")
+		# raise Exception("Error : Block number out of bounds") 
 
 # Create disk and allocate its fragments from global_fragments_list
 def create_disk(id, num_blocks):
@@ -187,130 +239,39 @@ for i in range(global_virtual_disk_size):
 		virtual_to_physical[i] = diskB[i-len(diskA)]
 
 
-def testReadWritePhysical():
-	try:
-		print("-----writing Atishya Jain at block 345")
-		write_physical_block(345,"Atishya Jain")
-	except Exception as e:
-		print(e)
+def test_checkpoints():
+	create_disk("c",100)
 
-	try:
-		print("-----writing Mankaran Singh at block 145")
-		write_physical_block(145,"Mankaran Singh")
-	except Exception as e:
-		print(e)
+	write_block("c",1,"1")
+	print("write(1,1)")
+	write_block("c",2,"2")
+	print("write(2,2)")
+	cpt1 = create_checkpoint("c")
+	print("---------CHECKPOINT cpt1 CREATE at C-------------")
+	write_block("c",2,"3")
+	print("write(2,3)")
+	cpt2 = create_checkpoint("c")
+	print("---------CHECKPOINT cpt2 CREATE at C-------------")
 
-	try:
-		print("-----writing Avaljot Singh at block 500")
-		write_physical_block(500,"Avaljot Singh")
-	except Exception as e:
-		print(e)
+	restore_checkpoint("c",cpt1)
+	print("---------CHECKPOINT cpt1 RESTORED at C-------------")
+	print("Data at block 2 on c is: "+read_block("c",2))
 
-	try:
-		print("-----writing Mayank Singh Chauhan at block 82")
-		write_physical_block(82,"Mayank Singh Chauhan")
-	except Exception as e:
-		print(e)
-	
-	print("-----reading block 145")
-	print(read_physical_block(145))
+	restore_checkpoint("c",cpt2)
+	print("---------CHECKPOINT cpt2 RESTORED at C-------------")
+	print("Data at block 2 on c is: "+read_block("c",2))
 
-	try:
-		print("-----reading block 500")
-		print(read_physical_block(500))
-	except Exception as e:
-		print(e)
+	write_block("c",2,"4")
+	print("write(2,4)")
+	cpt3 = create_checkpoint("c")
+	print("--------CHECKPOINT cpt3 CREATED at C---------------")
 
-	print("-----reading block 82")
-	print(read_physical_block(82))
-	print("-----reading block 345")
-	print(read_physical_block(345))
+	restore_checkpoint("c",cpt1)
+	print("---------CHECKPOINT cpt1 RESTORED at C-------------")
+	print("Data at block 2 on c is: "+read_block("c",2))
 
-	try:
-		print("-----reading block -23")
-		print(read_physical_block(-23))
-	except Exception as e:
-		print(e)
-	print("-----reading block 121")
-	print(read_physical_block(121))
+	restore_checkpoint("c",cpt3)
+	print("---------CHECKPOINT cpt3 RESTORED at C-------------")
+	print("Data at block 2 on c is: "+read_block("c",2))
 
-def testDiskCreation():
-	global global_fragments_list
-	for i in range(4):
-		create_disk(i,50)
-		print("-----creating disk "+str(i)+" of size 50-----")
-		print("-----prinitng fragments-----")
-		print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	delete_disk(1)
-	print("-----deleting disk 1-----")
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	delete_disk(3)
-	print("-----deleting disk 3-----")
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	for i in range(3):
-		create_disk(i+10,100)
-		print("-----creating disk "+str(i+10)+" of size 100-----")
-		print("-----prinitng fragments-----")
-		print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	create_disk(5,100)
-	print("-----creating disk 5 of size 100-----")
-	print("-----prinitng fragments-----")	
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	delete_disk(5)
-	print("-----deleting disk 5-----")
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	delete_disk(12)
-	print("-----deleting disk 12-----")
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	delete_disk(11)
-	print("-----deleting disk 11-----")
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	delete_disk(10)
-	print("-----deleting disk 10-----")
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	delete_disk(2)
-	print("-----deleting disk 2-----")
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	delete_disk(0)
-	print("-----deleting disk 0-----")
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-
-def testReadWriteVirtual():
-	create_disk(0,400)
-	print("-----creating disk 0 of size 400-----")
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	write_block(0,58,"Mayank Singh Chauhan")
-	print("-----write Mayank Singh Chauhan at disk 0 at block 58-----")
-	print("-----read at disk 0 at block 58-----")
-	print(read_block(0,58))
-	create_disk(1,99)
-	print("-----creating disk 1 of size 99-----")
-	write_block(1,58,"Mankaran Singh")
-	print("-----write Mankaran Singh at disk 1 at block 58-----")
-	print("-----read at disk 1 at block 58-----")
-	print(read_block(1,58))
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-	delete_disk(1)
-	print("-----delete disk 1-----")
-	print("-----prinitng fragments-----")
-	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
-
-print("----------TEST READ WRITE PHYSICAL BEGIN--------")
-testReadWritePhysical()
-print("----------TEST READ WRITE PHYSICAL END--------")
-print("----------TEST DISK CREATION BEGIN--------")
-testDiskCreation()
-print("----------TEST DISK CREATION END--------")
-print("----------TEST READ WRITE VIRTUAL BEGIN--------")
-testReadWriteVirtual()
-print("----------TEST READ WRITE VIRTUAL END--------")
+test_checkpoints()
