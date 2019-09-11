@@ -156,9 +156,11 @@ def create_disk(id, num_blocks):
 				if required > 0:
 					if global_fragments_list[i].num_blocks <= required:
 						fragment.append(global_fragments_list[i])
+						required-=global_fragments_list[i].num_blocks
 						global_fragments_list.pop(i)
 					else:
 						global_fragments_list[i].num_blocks -= required
+						required=0
 						fragment.append(Fragments(global_fragments_list[i].starting_block+global_fragments_list[i].num_blocks ,required))
 				else:
 					break
