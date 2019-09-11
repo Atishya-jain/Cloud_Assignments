@@ -14,7 +14,7 @@ class Fragments:
 # A class whose object we will create for each virtual disk
 class Disk:
 	def __init__(self, blockId, num_blocks, fragment):
-		self.blockId = blockID					# BlockID of this disk
+		self.blockId = blockId					# BlockID of this disk
 		self.num_blocks = num_blocks			# Number of blocks in this virtual disk
 		self.fragment = fragment				# A list of fragments for this virtual disk
 
@@ -102,7 +102,7 @@ def create_disk(id, num_blocks):
 		if (not allocated) and (total_space_left >= required):
 			for i in range(len(global_fragments_list)-1, -1, -1):
 				if required > 0:
-					if global_fragments_list.num_blocks <= required:
+					if global_fragments_list[i].num_blocks <= required:
 						fragment.append(global_fragments_list[i])
 						global_fragments_list.pop(i)
 					else:
@@ -110,7 +110,7 @@ def create_disk(id, num_blocks):
 						fragment.append(Fragments(global_fragments_list[i].starting_block+global_fragments_list[i].num_blocks ,required))
 				else:
 					break
-		else:
+		elif total_space_left < required:
 			raise Exception("Error : Not enough space left to create disk of this size") 
 
 		my_obj = Disk(id, num_blocks, fragment)
@@ -123,37 +123,48 @@ def delete_disk(id):
 	global disks
 	global global_fragments_list
 	obj = disks[id]
+	# print(len(obj.fragment))
 	for fragment in obj.fragment:
 		leng = len(global_fragments_list)
 		end_tf = fragment.starting_block + fragment.num_blocks
-		for j in range(leng):
-			if global_fragments_list[j].starting_block > end_tf:
-				if j > 0:
-					prev_end_tf = global_fragments_list[j-1].starting_block+global_fragments_list[j-1].num_blocks
-					if prev_end_tf == fragment.starting_block:
-						global_fragments_list[j-1].num_blocks += fragment.num_blocks
+
+		if leng > 0:
+			for j in range(leng):
+				if global_fragments_list[j].starting_block > end_tf:
+					if j > 0:
+						prev_end_tf = global_fragments_list[j-1].starting_block+global_fragments_list[j-1].num_blocks
+						if prev_end_tf == fragment.starting_block:
+							global_fragments_list[j-1].num_blocks += fragment.num_blocks
+						else:
+							global_fragments_list.insert(j-1, fragment)
 					else:
-						global_fragments_list.insert(j-1, fragment)
-				else:
-					global_fragments_list.insert(fragment)
-			elif global_fragments_list[j].starting_block == end_tf:
-				if j > 0:
-					prev_end_tf = global_fragments_list[j-1].starting_block+global_fragments_list[j-1].num_blocks
-					if prev_end_tf == fragment.starting_block:
-						global_fragments_list[j-1].num_blocks += fragment.num_blocks
+						global_fragments_list.insert(0, fragment)
+					break	
+				elif global_fragments_list[j].starting_block == end_tf:
+					if j > 0:
+						prev_end_tf = global_fragments_list[j-1].starting_block+global_fragments_list[j-1].num_blocks
+						if prev_end_tf == fragment.starting_block:
+							global_fragments_list[j-1].num_blocks += fragment.num_blocks+global_fragments_list[j].num_blocks
+							global_fragments_list.pop(j)
+						else:
+							global_fragments_list[j].starting_block = fragment.starting_block
+							global_fragments_list[j].num_blocks += fragment.num_blocks
 					else:
-						global_fragments_list.insert(j-1, fragment)
-				else:
-					global_fragments_list[j].starting_block = fragment.starting_block
-					global_fragments_list[j].num_blocks += fragment.num_blocks
-			else: 
-				if j == leng-1:
-					prev_end_tf = global_fragments_list[j].starting_block+global_fragments_list[j].num_blocks
-					if prev_end_tf == fragment.starting_block:
+						global_fragments_list[j].starting_block = fragment.starting_block
 						global_fragments_list[j].num_blocks += fragment.num_blocks
-					else:
-						global_fragments_list.append(fragment)
-	disks[id] = None
+					break	
+				else: 
+					if j == leng-1:
+						prev_end_tf = global_fragments_list[j].starting_block+global_fragments_list[j].num_blocks
+						if prev_end_tf == fragment.starting_block:
+							global_fragments_list[j].num_blocks += fragment.num_blocks
+						else:
+							global_fragments_list.append(fragment)
+						break
+		else:
+			global_fragments_list.append(fragment)
+
+	del(disks[id])
 
 
 block_size = 100
@@ -172,3 +183,84 @@ for i in range(global_virtual_disk_size):
 		virtual_to_physical[i] = diskA[i]
 	else:
 		virtual_to_physical[i] = diskB[i-len(diskA)]
+
+
+def testReadWritePhysical():
+	try:
+		write_physical_block(345,"Atishya Jain")
+	except Exception as e:
+		print(e)
+
+	try:
+		write_physical_block(145,"Mankaran Singh")
+	except Exception as e:
+		print(e)
+
+	try:
+		write_physical_block(500,"Avaljot Singh")
+	except Exception as e:
+		print(e)
+
+	try:
+		write_physical_block(82,"Mayank Singh Chauhan")
+	except Exception as e:
+		print(e)
+		
+	print(read_physical_block(145))
+
+	try:
+		print(read_physical_block(500))
+	except Exception as e:
+		print(e)
+
+	print(read_physical_block(82))
+	print(read_physical_block(345))
+
+	try:
+		print(read_physical_block(-23))
+	except Exception as e:
+		print(e)
+	print(read_physical_block(121))
+
+def testDiskCreation():
+	global global_fragments_list
+	for i in range(4):
+		create_disk(i,50)
+		print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	delete_disk(1)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	delete_disk(3)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	for i in range(3):
+		create_disk(i+10,100)
+		print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	create_disk(5,100)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	delete_disk(5)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	delete_disk(12)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	delete_disk(11)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	delete_disk(10)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	delete_disk(2)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	delete_disk(0)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+
+def testReadWriteVirtual():
+	create_disk(0,400)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	write_block(0,58,"Mayank Singh Chauhan")
+	print(read_block(0,58))
+	create_disk(1,99)
+	write_block(1,58,"Mankaran Singh")
+	print(read_block(1,58))
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+	delete_disk(1)
+	print([(j.starting_block, j.num_blocks) for j in global_fragments_list])
+
+testReadWritePhysical()
+testDiskCreation()
+testReadWriteVirtual()
