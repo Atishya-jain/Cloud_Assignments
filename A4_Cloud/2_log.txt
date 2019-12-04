@@ -1,0 +1,58 @@
+Warning: $HADOOP_HOME is deprecated.
+
+WARNING: An illegal reflective access operation has occurred
+WARNING: Illegal reflective access by org.apache.hadoop.security.authentication.util.KerberosUtil (file:/opt/hadoop/hadoop/hadoop-core-1.2.0.jar) to method sun.security.krb5.Config.getInstance()
+WARNING: Please consider reporting this to the maintainers of org.apache.hadoop.security.authentication.util.KerberosUtil
+WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
+WARNING: All illegal access operations will be denied in a future release
+19/10/21 00:33:05 WARN mapred.JobClient: Use GenericOptionsParser for parsing the arguments. Applications should implement Tool for the same.
+19/10/21 00:33:05 INFO input.FileInputFormat: Total input paths to process : 1
+19/10/21 00:33:05 INFO util.NativeCodeLoader: Loaded the native-hadoop library
+19/10/21 00:33:05 WARN snappy.LoadSnappy: Snappy native library not loaded
+19/10/21 00:33:06 INFO mapred.JobClient: Running job: job_201910202347_0007
+19/10/21 00:33:07 INFO mapred.JobClient:  map 0% reduce 0%
+19/10/21 00:33:18 INFO mapred.JobClient:  map 71% reduce 0%
+19/10/21 00:33:21 INFO mapred.JobClient:  map 100% reduce 0%
+19/10/21 00:33:29 INFO mapred.JobClient:  map 100% reduce 33%
+19/10/21 00:33:32 INFO mapred.JobClient:  map 100% reduce 69%
+19/10/21 00:33:35 INFO mapred.JobClient:  map 100% reduce 74%
+19/10/21 00:33:39 INFO mapred.JobClient:  map 100% reduce 80%
+19/10/21 00:33:42 INFO mapred.JobClient:  map 100% reduce 85%
+19/10/21 00:33:45 INFO mapred.JobClient:  map 100% reduce 90%
+19/10/21 00:33:48 INFO mapred.JobClient:  map 100% reduce 96%
+19/10/21 00:33:51 INFO mapred.JobClient:  map 100% reduce 100%
+19/10/21 00:33:52 INFO mapred.JobClient: Job complete: job_201910202347_0007
+19/10/21 00:33:52 INFO mapred.JobClient: Counters: 29
+19/10/21 00:33:52 INFO mapred.JobClient:   Map-Reduce Framework
+19/10/21 00:33:52 INFO mapred.JobClient:     Spilled Records=13835003
+19/10/21 00:33:52 INFO mapred.JobClient:     Map output materialized bytes=3236364619/10/21 00:33:52 INFO mapred.JobClient:     Reduce input records=4000000
+19/10/21 00:33:52 INFO mapred.JobClient:     Virtual memory (bytes) snapshot=4160606208
+19/10/21 00:33:52 INFO mapred.JobClient:     Map input records=4000000
+19/10/21 00:33:52 INFO mapred.JobClient:     SPLIT_RAW_BYTES=116
+19/10/21 00:33:52 INFO mapred.JobClient:     Map output bytes=24363640
+19/10/21 00:33:52 INFO mapred.JobClient:     Reduce shuffle bytes=32363646
+19/10/21 00:33:52 INFO mapred.JobClient:     Physical memory (bytes) snapshot=334913536
+19/10/21 00:33:52 INFO mapred.JobClient:     Reduce input groups=11
+19/10/21 00:33:52 INFO mapred.JobClient:     Combine output records=0
+19/10/21 00:33:52 INFO mapred.JobClient:     Reduce output records=11
+19/10/21 00:33:52 INFO mapred.JobClient:     Map output records=4000000
+19/10/21 00:33:52 INFO mapred.JobClient:     Combine input records=0
+19/10/21 00:33:52 INFO mapred.JobClient:     CPU time spent (ms)=38490
+19/10/21 00:33:52 INFO mapred.JobClient:     Total committed heap usage (bytes)=204472320
+19/10/21 00:33:52 INFO mapred.JobClient:   File Input Format Counters
+19/10/21 00:33:52 INFO mapred.JobClient:     Bytes Read=50852560
+19/10/21 00:33:52 INFO mapred.JobClient:   FileSystemCounters
+19/10/21 00:33:52 INFO mapred.JobClient:     HDFS_BYTES_READ=50852676
+19/10/21 00:33:52 INFO mapred.JobClient:     FILE_BYTES_WRITTEN=111886235
+19/10/21 00:33:52 INFO mapred.JobClient:     FILE_BYTES_READ=79407412
+19/10/21 00:33:52 INFO mapred.JobClient:     HDFS_BYTES_WRITTEN=469
+19/10/21 00:33:52 INFO mapred.JobClient:   Job Counters
+19/10/21 00:33:52 INFO mapred.JobClient:     Launched map tasks=1
+19/10/21 00:33:52 INFO mapred.JobClient:     Launched reduce tasks=1
+19/10/21 00:33:52 INFO mapred.JobClient:     SLOTS_MILLIS_REDUCES=29044
+19/10/21 00:33:52 INFO mapred.JobClient:     Total time spent by all reduces waiting after reserving slots (ms)=0
+19/10/21 00:33:52 INFO mapred.JobClient:     SLOTS_MILLIS_MAPS=15467
+19/10/21 00:33:52 INFO mapred.JobClient:     Total time spent by all maps waiting after reserving slots (ms)=0
+19/10/21 00:33:52 INFO mapred.JobClient:     Data-local map tasks=1
+19/10/21 00:33:52 INFO mapred.JobClient:   File Output Format Counters
+19/10/21 00:33:52 INFO mapred.JobClient:     Bytes Written=469
