@@ -64,12 +64,12 @@ class Disk:
 
 	def restore_checkpoint(self,cpt):
 		#restore the disk state at checkpoint index cpt from the array self.checkpoints
+		if(cpt>=len(self.checkpoints)):
+			raise Exception("Error: checkpoint id not valid")
 		# Step 1: Write empty string on all blocks of this disk
 		for i in range(self.num_blocks):
 			self.write(i,"",False)
 		# Step 2: Restore state
-		if(cpt>=len(self.checkpoints)):
-			raise Exception("Error: checkpoint id not valid")
 		writes_to_do = self.checkpoints[cpt]
 		for block_num, data in writes_to_do:
 			self.write(block_num,data,False)
